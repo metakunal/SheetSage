@@ -15,7 +15,7 @@ function App() {
     localStorage.setItem("sheetHistory", JSON.stringify(history));
   }, [history]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (spreadsheetLink.includes("docs.google.com/spreadsheets")) {
       const embedUrl = spreadsheetLink.replace("/edit", "/pubhtml");
@@ -31,6 +31,32 @@ function App() {
       setHistory(newHistory);
       setSpreadsheetLink("");
       setPromptInput("");
+
+      // Send the spreadsheet link and prompt input to the backend
+      try {
+        const response = await fetch(
+          "http://localhost:5000/log_spreadsheet_id",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              spreadsheetLink,
+              promptExcel, // Include the prompt input in the request
+            }),
+          }
+        );
+
+        const result = await response.json();
+        if (response.ok) {
+          console.log("Data logged successfully:", result);
+        } else {
+          console.error("Error logging data:", result.error);
+        }
+      } catch (error) {
+        console.error("Error communicating with backend:", error);
+      }
     } else {
       alert("Please enter a valid Google Sheets link.");
     }
